@@ -1,8 +1,10 @@
+"use client";
+
 import { useParams } from 'next/navigation';
 
 export default function ProfilePage() {
   const params = useParams();
-  const username = params?.username;
+  const username = params.username;
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
