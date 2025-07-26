@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "X6F8273N97.com.aadikatyal.tap",
+        "paths": [ "/*" ]
+      },
+      {
+        "appID": "X6F8273N97.com.aadikatyal.tap.clip",
+        "paths": [ "/*" ]
+      }
+    ]
+  },
+  "appclips": {
+    "apps": [
+      "X6F8273N97.com.aadikatyal.tap.clip"
+    ]
+  }
+}
