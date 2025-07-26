@@ -27,27 +27,60 @@ export default function ProfilePage() {
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
         justifyContent: "center",
-        height: "100vh", // Full height to center vertically
-        backgroundColor: "#000", // Optional: Black background
-        color: "#fff", // Optional: White text
+        alignItems: "center",
+        height: "100vh",
+        background: "linear-gradient(to bottom right, #ff4b2b, #ff416c)",
+        padding: "20px",
       }}
     >
-      <img
-        src={profile.image}
-        alt={profile.name}
+      <div
         style={{
-          width: "120px",
-          height: "120px",
-          borderRadius: "50%",
-          objectFit: "cover",
-          marginBottom: "20px",
+          backgroundColor: "#fff",
+          borderRadius: "16px",
+          padding: "30px 20px",
+          textAlign: "center",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+          maxWidth: "320px",
+          width: "100%",
         }}
-      />
-      <h1 style={{ fontSize: "24px", margin: "0 0 10px 0" }}>{profile.name}</h1>
-      <p style={{ fontSize: "16px", margin: "0" }}>{profile.title}</p>
+      >
+        <img
+          src={profile.image}
+          alt={profile.name}
+          style={{
+            width: "120px",
+            height: "120px",
+            borderRadius: "50%",
+            objectFit: "cover",
+            marginBottom: "20px",
+            border: "3px solid #eee",
+          }}
+        />
+        <h1 style={{ fontSize: "22px", margin: "0 0 10px 0", color: "#333" }}>
+          {profile.name}
+        </h1>
+        <p style={{ fontSize: "16px", margin: "0 0 20px 0", color: "#777" }}>
+          {profile.title}
+        </p>
+        <button
+          style={{
+            padding: "10px 20px",
+            fontSize: "16px",
+            fontWeight: "bold",
+            color: "#fff",
+            backgroundColor: "#ff4b2b",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            transition: "background 0.3s",
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#ff1e00")}
+          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#ff4b2b")}
+        >
+          View Contact
+        </button>
+      </div>
     </div>
   );
 }
