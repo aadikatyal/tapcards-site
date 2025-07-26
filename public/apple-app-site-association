@@ -4,11 +4,11 @@
     "details": [
       {
         "appID": "X6F8273N97.com.aadikatyal.tap",
-        "paths": [ "/aadikatyal/*", "/" ]
+        "paths": [ "/*" ]
       },
       {
         "appID": "X6F8273N97.com.aadikatyal.tap.clip",
-        "paths": [ "/aadikatyal/*", "/" ]
+        "paths": [ "/*" ]
       }
     ]
   },
