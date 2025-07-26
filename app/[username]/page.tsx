@@ -5,7 +5,7 @@ const profiles: Record<string, { name: string; title: string; image: string }> =
   aadikatyal: {
     name: "Aadi Katyal",
     title: "Founder at Tap",
-    image: "/profile-aadi.jpg", // put a profile image in /public
+    image: "/profile-aadi.jpg", // Ensure this file exists in /public
   },
   joey: {
     name: "Joey Garcia",
@@ -24,14 +24,30 @@ export default function ProfilePage() {
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh", // Full height to center vertically
+        backgroundColor: "#000", // Optional: Black background
+        color: "#fff", // Optional: White text
+      }}
+    >
       <img
         src={profile.image}
         alt={profile.name}
-        style={{ width: "120px", borderRadius: "50%", marginBottom: "20px" }}
+        style={{
+          width: "120px",
+          height: "120px",
+          borderRadius: "50%",
+          objectFit: "cover",
+          marginBottom: "20px",
+        }}
       />
-      <h1>{profile.name}</h1>
-      <p>{profile.title}</p>
+      <h1 style={{ fontSize: "24px", margin: "0 0 10px 0" }}>{profile.name}</h1>
+      <p style={{ fontSize: "16px", margin: "0" }}>{profile.title}</p>
     </div>
   );
 }
