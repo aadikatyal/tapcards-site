@@ -7,14 +7,14 @@
         "paths": [ "/*" ]
       },
       {
-        "appID": "X6F8273N97.com.aadikatyal.tap.clip",
-        "paths": [ "/*" ]
+        "appID": "X6F8273N97.com.aadikatyal.tap.Clip",
+        "paths": [ "/", "/*" ]
       }
     ]
   },
   "appclips": {
     "apps": [
-      "X6F8273N97.com.aadikatyal.tap.clip"
+      "X6F8273N97.com.aadikatyal.tap.Clip"
     ]
   }
 }
