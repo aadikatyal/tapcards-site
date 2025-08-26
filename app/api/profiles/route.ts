@@ -77,80 +77,120 @@ async function saveProfiles(profiles: Record<string, ProfileData>) {
   await fs.writeFile(PROFILES_FILE, JSON.stringify(profiles, null, 2));
 }
 
+// Helper function to add CORS headers
+function addCORSHeaders(response: NextResponse): NextResponse {
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  return response;
+}
+
+// OPTIONS endpoint for CORS preflight requests
+export async function OPTIONS() {
+  const response = new NextResponse(null, { status: 200 });
+  return addCORSHeaders(response);
+}
+
 // GET endpoint to fetch a specific profile
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const username = searchParams.get('username');
-  
-  if (!username) {
-    return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+  try {
+    const { searchParams } = new URL(request.url);
+    const username = searchParams.get('username');
+    
+    if (!username) {
+      const errorResponse = NextResponse.json(
+        { error: 'Username is required' }, 
+        { status: 400 }
+      );
+      return addCORSHeaders(errorResponse);
+    }
+    
+    const profiles = await loadProfiles();
+    const profile = profiles[username];
+    
+    if (!profile) {
+      const errorResponse = NextResponse.json(
+        { error: 'Profile not found' }, 
+        { status: 404 }
+      );
+      return addCORSHeaders(errorResponse);
+    }
+    
+    const successResponse = NextResponse.json(profile);
+    return addCORSHeaders(successResponse);
+    
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    const errorResponse = NextResponse.json(
+      { error: 'Internal server error' }, 
+      { status: 500 }
+    );
+    return addCORSHeaders(errorResponse);
   }
-  
-  const profiles = await loadProfiles();
-  const profile = profiles[username];
-  
-  if (!profile) {
-    return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-  }
-  
-  return NextResponse.json(profile);
 }
 
 // POST endpoint to create/update a profile
 export async function POST(request: NextRequest) {
-    try {
-      const body = await request.json();
-      const { username, displayName, bio, links, theme, isPublic } = body;
-      
-      if (!username || !displayName) {
-        return NextResponse.json(
-          { error: 'Username and displayName are required' }, 
-          { status: 400 }
-        );
-      }
-      
-      const profiles = await loadProfiles();
-      const existingProfile = profiles[username];
-      const isUpdate = existingProfile !== undefined;
-      
-      // Create or update profile
-      const now = new Date().toISOString();
-      const profileData: ProfileData = {
-        username: username.toLowerCase(),
-        name: displayName,
-        title: bio ? bio.substring(0, 100) : (existingProfile?.title || "Tap User"),
-        image: existingProfile?.image || "/default-profile.jpg", // Preserve existing image
-        bio: bio || existingProfile?.bio || "",
-        // Preserve existing social links if not provided
-        phone: existingProfile?.phone,
-        email: existingProfile?.email,
-        instagram: existingProfile?.instagram,
-        linkedin: existingProfile?.linkedin,
-        links: links || existingProfile?.links || [],
-        theme: theme || existingProfile?.theme || "default",
-        isPublic: isPublic !== undefined ? isPublic : (existingProfile?.isPublic ?? true),
-        createdAt: existingProfile?.createdAt || now,
-        updatedAt: now,
-      };
-      
-      profiles[username] = profileData;
-      await saveProfiles(profiles);
-      
-      return NextResponse.json({ 
-        success: true, 
-        profile: profileData,
-        url: `https://tapcards.us/${username}`,
-        action: isUpdate ? 'updated' : 'created'
-      });
-      
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      return NextResponse.json(
-        { error: 'Failed to save profile' }, 
-        { status: 500 }
+  try {
+    const body = await request.json();
+    console.log('Received profile data:', body); // Debug logging
+    
+    const { username, displayName, bio, links, theme, isPublic } = body;
+    
+    if (!username || !displayName) {
+      const errorResponse = NextResponse.json(
+        { error: 'Username and displayName are required' }, 
+        { status: 400 }
       );
+      return addCORSHeaders(errorResponse);
     }
+    
+    const profiles = await loadProfiles();
+    const existingProfile = profiles[username];
+    const isUpdate = existingProfile !== undefined;
+    
+    // Create or update profile
+    const now = new Date().toISOString();
+    const profileData: ProfileData = {
+      username: username.toLowerCase(),
+      name: displayName,
+      title: bio ? bio.substring(0, 100) : (existingProfile?.title || "Tap User"),
+      image: existingProfile?.image || "/default-profile.jpg",
+      bio: bio || existingProfile?.bio || "",
+      phone: existingProfile?.phone,
+      email: existingProfile?.email,
+      instagram: existingProfile?.instagram,
+      linkedin: existingProfile?.linkedin,
+      links: links || existingProfile?.links || [],
+      theme: theme || existingProfile?.theme || "default",
+      isPublic: isPublic !== undefined ? isPublic : (existingProfile?.isPublic ?? true),
+      createdAt: existingProfile?.createdAt || now,
+      updatedAt: now,
+    };
+    
+    profiles[username] = profileData;
+    await saveProfiles(profiles);
+    
+    console.log('Profile saved successfully:', profileData); // Debug logging
+    
+    const successResponse = NextResponse.json({ 
+      success: true, 
+      profile: profileData,
+      url: `https://tapcards.us/${username}`,
+      action: isUpdate ? 'updated' : 'created'
+    });
+    
+    return addCORSHeaders(successResponse);
+    
+  } catch (error) {
+    console.error('Error saving profile:', error);
+    const errorResponse = NextResponse.json(
+      { error: 'Failed to save profile' }, 
+      { status: 500 }
+    );
+    return addCORSHeaders(errorResponse);
   }
+}
 
 // PUT endpoint to update an existing profile
 export async function PUT(request: NextRequest) {
@@ -159,20 +199,22 @@ export async function PUT(request: NextRequest) {
     const { username, displayName, bio, links, theme, isPublic } = body;
     
     if (!username) {
-      return NextResponse.json(
+      const errorResponse = NextResponse.json(
         { error: 'Username is required' }, 
         { status: 400 }
       );
+      return addCORSHeaders(errorResponse);
     }
     
     const profiles = await loadProfiles();
     const existingProfile = profiles[username];
     
     if (!existingProfile) {
-      return NextResponse.json(
+      const errorResponse = NextResponse.json(
         { error: 'Profile not found' }, 
         { status: 404 }
       );
+      return addCORSHeaders(errorResponse);
     }
     
     // Update profile
@@ -190,16 +232,19 @@ export async function PUT(request: NextRequest) {
     profiles[username] = updatedProfile;
     await saveProfiles(profiles);
     
-    return NextResponse.json({ 
+    const successResponse = NextResponse.json({ 
       success: true, 
       profile: updatedProfile 
     });
     
+    return addCORSHeaders(successResponse);
+    
   } catch (error) {
     console.error('Error updating profile:', error);
-    return NextResponse.json(
+    const errorResponse = NextResponse.json(
       { error: 'Failed to update profile' }, 
       { status: 500 }
     );
+    return addCORSHeaders(errorResponse);
   }
 }
