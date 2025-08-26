@@ -1,52 +1,79 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { FaInstagram, FaLinkedin, FaPhone, FaEnvelope } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { FaInstagram, FaLinkedin, FaPhone, FaEnvelope, FaLink } from "react-icons/fa";
 
-const profiles: Record<
-  string,
-  {
-    name: string;
+interface ProfileData {
+  username: string;
+  name: string;
+  title: string;
+  image: string;
+  bio: string;
+  phone?: string;
+  email?: string;
+  instagram?: string;
+  linkedin?: string;
+  links?: Array<{
     title: string;
-    image: string;
-    bio: string;
-    phone?: string;
-    email?: string;
-    instagram?: string;
-    linkedin?: string;
-  }
-> = {
-  aadikatyal: {
-    name: "Aadi Katyal",
-    title: "Founder at Tap",
-    image: "/profile-aadi.jpg",
-    bio: "I'm building Tap to make digital networking seamless. Let’s connect!",
-    phone: "+1 (555) 123-4567",
-    email: "aadi@tapcards.us",
-    instagram: "aadikatyal",
-    linkedin: "aadikatyal",
-  },
-  joey: {
-    name: "Joey Garcia",
-    title: "Broker at American Life",
-    image: "/profile-joey.jpg",
-    bio: "Helping families find financial security. Licensed in 10 states.",
-    phone: "+1 (555) 987-6543",
-    email: "joey@americanlife.com",
-    instagram: "joeygarcia",
-    linkedin: "joey-garcia",
-  },
-};
+    url: string;
+    icon?: string;
+  }>;
+  theme?: string;
+  isPublic?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function ProfilePage() {
   const params = useParams();
   const username = params?.username as string;
-  const profile = profiles[username] || {
-    name: "Unknown User",
-    title: "No details available",
-    image: "/default-profile.jpg",
-    bio: "",
-  };
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/profiles?username=${username}`);
+        
+        if (!response.ok) {
+          throw new Error('Profile not found');
+        }
+        
+        const profileData = await response.json();
+        setProfile(profileData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (username) {
+      fetchProfile();
+    }
+  }, [username]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", backgroundColor: "#000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div style={{ minHeight: "100vh", backgroundColor: "#000", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <h1>Profile Not Found</h1>
+          <p>Sorry, the profile for @{username} doesn't exist.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -88,20 +115,33 @@ export default function ProfilePage() {
         {profile.bio}
       </p>
 
+      {/* Custom Links */}
+      {profile.links && profile.links.length > 0 && (
+        <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginBottom: "20px" }}>
+          {profile.links.map((link, index) => (
+            <a
+              key={index}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={buttonStyle}
+            >
+              {link.icon && <span>{link.icon}</span>}
+              {link.title}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Social Links */}
       <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
         {profile.phone && (
-          <a
-            href={`tel:${profile.phone}`}
-            style={buttonStyle}
-          >
+          <a href={`tel:${profile.phone}`} style={buttonStyle}>
             <FaPhone /> Call
           </a>
         )}
         {profile.email && (
-          <a
-            href={`mailto:${profile.email}`}
-            style={buttonStyle}
-          >
+          <a href={`mailto:${profile.email}`} style={buttonStyle}>
             <FaEnvelope /> Email
           </a>
         )}
