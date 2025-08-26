@@ -117,7 +117,7 @@ export default function ProfilePage() {
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8">
             <img 
-              src={isDarkMode ? "/tap-white.png" : "/tap.png"}
+              src={isDarkMode ? "/tap.png" : "/tap-white.png"}
               alt="tap logo"
               className="w-full h-full object-contain"
             />
