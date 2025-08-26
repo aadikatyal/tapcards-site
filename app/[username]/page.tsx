@@ -100,9 +100,6 @@ export default function ProfilePage() {
         }}
       />
       <h1 style={{ fontSize: "28px", margin: "0" }}>{profile.name}</h1>
-      <p style={{ fontSize: "18px", margin: "5px 0 20px 0", color: "#aaa" }}>
-        {profile.title}
-      </p>
       <p
         style={{
           maxWidth: "600px",
