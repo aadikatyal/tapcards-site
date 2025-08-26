@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaInstagram, FaLinkedin, FaPhone, FaEnvelope, FaLink, FaSun, FaMoon } from "react-icons/fa";
+import { FaPhone, FaEnvelope, FaLink, FaSun, FaMoon } from "react-icons/fa";
 
 interface ProfileData {
   username: string;
@@ -12,8 +12,6 @@ interface ProfileData {
   bio: string;
   phone?: string;
   email?: string;
-  instagram?: string;
-  linkedin?: string;
   links?: Array<{
     title: string;
     url: string;
@@ -200,34 +198,6 @@ export default function ProfilePage() {
               }`}
             >
               <FaEnvelope size={20} />
-            </a>
-          )}
-          {profile.instagram && (
-            <a
-              href={`https://instagram.com/${profile.instagram}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`p-4 rounded-full transition-all duration-300 hover:scale-110 ${
-                isDarkMode 
-                  ? 'bg-white text-black hover:bg-gray-100' 
-                  : 'bg-black text-white hover:bg-gray-800'
-              }`}
-            >
-              <FaInstagram size={20} />
-            </a>
-          )}
-          {profile.linkedin && (
-            <a
-              href={`https://linkedin.com/in/${profile.linkedin}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`p-4 rounded-full transition-all duration-300 hover:scale-110 ${
-                isDarkMode 
-                  ? 'bg-white text-black hover:bg-gray-100' 
-                  : 'bg-black text-white hover:bg-gray-800'
-              }`}
-            >
-              <FaLinkedin size={20} />
             </a>
           )}
         </div>

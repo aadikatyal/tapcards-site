@@ -30,8 +30,6 @@ interface ProfileData {
   bio: string;
   phone?: string;
   email?: string;
-  instagram?: string;
-  linkedin?: string;
   links?: Array<{
     title: string;
     url: string;
@@ -88,8 +86,6 @@ function getDefaultProfiles() {
       bio: "i built tap to make digital networking seamless. let's connect!",
       phone: "+1 (732) 858-4219",
       email: "aadi@tapcards.us",
-      instagram: "aadikatyal",
-      linkedin: "aadikatyal",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -194,8 +190,6 @@ export async function POST(request: NextRequest) {
       bio: bio || existingProfile?.bio || "",
       phone: existingProfile?.phone,
       email: existingProfile?.email,
-      instagram: existingProfile?.instagram,
-      linkedin: existingProfile?.linkedin,
       links: links || existingProfile?.links || [],
       theme: theme || existingProfile?.theme || "default",
       isPublic: isPublic !== undefined ? isPublic : (existingProfile?.isPublic ?? true),
