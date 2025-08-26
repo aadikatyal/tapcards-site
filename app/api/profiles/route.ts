@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
-
-// Path to store profile data (you could also use a database like PostgreSQL, MongoDB, etc.)
-const PROFILES_FILE = path.join(process.cwd(), 'data', 'profiles.json');
+import { kv } from '@vercel/kv';
 
 interface ProfileData {
   username: string;
@@ -26,25 +22,16 @@ interface ProfileData {
   updatedAt: string;
 }
 
-// Ensure the data directory exists
-async function ensureDataDirectory() {
-  const dataDir = path.dirname(PROFILES_FILE);
-  try {
-    await fs.access(dataDir);
-  } catch {
-    await fs.mkdir(dataDir, { recursive: true });
-  }
-}
-
-// Load existing profiles
+// Load existing profiles from KV
 async function loadProfiles(): Promise<Record<string, ProfileData>> {
   try {
-    await ensureDataDirectory();
-    const data = await fs.readFile(PROFILES_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    // Return default profiles if file doesn't exist
-    return {
+    const profiles = await kv.get('profiles');
+    if (profiles) {
+      return profiles as Record<string, ProfileData>;
+    }
+    
+    // Return default profiles if none exist
+    const defaultProfiles = {
       aadikatyal: {
         username: "aadikatyal",
         name: "Aadi Katyal",
@@ -68,13 +55,25 @@ async function loadProfiles(): Promise<Record<string, ProfileData>> {
         updatedAt: new Date().toISOString(),
       }
     };
+    
+    // Save default profiles to KV
+    await kv.set('profiles', defaultProfiles);
+    return defaultProfiles;
+    
+  } catch (error) {
+    console.error('Error loading profiles:', error);
+    return {};
   }
 }
 
-// Save profiles to file
+// Save profiles to KV
 async function saveProfiles(profiles: Record<string, ProfileData>) {
-  await ensureDataDirectory();
-  await fs.writeFile(PROFILES_FILE, JSON.stringify(profiles, null, 2));
+  try {
+    await kv.set('profiles', profiles);
+  } catch (error) {
+    console.error('Error saving profiles:', error);
+    throw error;
+  }
 }
 
 // Helper function to add CORS headers
@@ -133,7 +132,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Received profile data:', body); // Debug logging
+    console.log('Received profile data:', body);
     
     const { username, displayName, bio, links, theme, isPublic } = body;
     
@@ -171,7 +170,7 @@ export async function POST(request: NextRequest) {
     profiles[username] = profileData;
     await saveProfiles(profiles);
     
-    console.log('Profile saved successfully:', profileData); // Debug logging
+    console.log('Profile saved successfully:', profileData);
     
     const successResponse = NextResponse.json({ 
       success: true, 
@@ -242,7 +241,7 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error updating profile:', error);
     const errorResponse = NextResponse.json(
-      { error: 'Failed to update profile' }, 
+      { error: 'Failed to save profile' }, 
       { status: 500 }
     );
     return addCORSHeaders(errorResponse);
