@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@upstash/redis':
+        specifier: ^1.35.3
+        version: 1.35.3
       '@vercel/kv':
         specifier: ^3.0.0
         version: 3.0.0
