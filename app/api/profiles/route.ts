@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 
-// Initialize Redis client
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+// Initialize Redis client with validation
+let redis: Redis | null = null;
+
+try {
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  
+  if (!redisUrl || !redisToken) {
+    console.warn('Redis environment variables not set, using fallback storage');
+  } else {
+    redis = new Redis({
+      url: redisUrl,
+      token: redisToken,
+    });
+    console.log('Redis client initialized successfully');
+  }
+} catch (error) {
+  console.error('Failed to initialize Redis client:', error);
+  redis = null;
+}
 
 interface ProfileData {
   username: string;
@@ -31,42 +46,60 @@ interface ProfileData {
 // Load existing profiles from Redis
 async function loadProfiles(): Promise<Record<string, ProfileData>> {
   try {
+    if (!redis) {
+      console.log('Redis not available, using fallback profiles');
+      return getDefaultProfiles();
+    }
+    
+    console.log('Attempting to load profiles from Redis...');
     const profiles = await redis.get('profiles');
+    console.log('Redis response:', profiles);
+    
     if (profiles) {
+      console.log('Profiles found in Redis:', Object.keys(profiles));
       return profiles as Record<string, ProfileData>;
     }
     
+    console.log('No profiles in Redis, creating default profiles...');
     // Return default profiles if none exist
-    const defaultProfiles = {
-      aadikatyal: {
-        username: "aadikatyal",
-        name: "Aadi Katyal",
-        title: "Founder at Tap",
-        image: "/profile-aadi.jpg",
-        bio: "i built tap to make digital networking seamless. let's connect!",
-        phone: "+1 (732) 858-4219",
-        email: "aadi@tapcards.us",
-        instagram: "aadikatyal",
-        linkedin: "aadikatyal",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-    };
+    const defaultProfiles = getDefaultProfiles();
     
     // Save default profiles to Redis
+    console.log('Saving default profiles to Redis...');
     await redis.set('profiles', defaultProfiles);
+    console.log('Default profiles saved successfully');
     return defaultProfiles;
     
   } catch (error) {
     console.error('Error loading profiles:', error);
-    return {};
+    console.log('Falling back to default profiles');
+    return getDefaultProfiles();
   }
+}
+
+// Helper function to get default profiles
+function getDefaultProfiles() {
+  return {
+    aadikatyal: {
+      username: "aadikatyal",
+      name: "Aadi Katyal",
+      title: "Founder at Tap",
+      image: "/profile-aadi.jpg",
+      bio: "i built tap to make digital networking seamless. let's connect!",
+      phone: "+1 (732) 858-4219",
+      email: "aadi@tapcards.us",
+      instagram: "aadikatyal",
+      linkedin: "aadikatyal",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+  };
 }
 
 // Save profiles to Redis
 async function saveProfiles(profiles: Record<string, ProfileData>) {
   try {
-    await redis.set('profiles', profiles);
+    await redis?.set('profiles', profiles);
   } catch (error) {
     console.error('Error saving profiles:', error);
     throw error;
@@ -93,6 +126,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
     
+    console.log('GET request for username:', username);
+    
     if (!username) {
       const errorResponse = NextResponse.json(
         { error: 'Username is required' }, 
@@ -101,8 +136,12 @@ export async function GET(request: NextRequest) {
       return addCORSHeaders(errorResponse);
     }
     
+    console.log('Loading profiles...');
     const profiles = await loadProfiles();
+    console.log('Available profiles:', Object.keys(profiles));
+    
     const profile = profiles[username];
+    console.log('Found profile:', profile ? 'yes' : 'no');
     
     if (!profile) {
       const errorResponse = NextResponse.json(
