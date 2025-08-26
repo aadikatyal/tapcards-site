@@ -152,30 +152,9 @@ export default function ProfilePage() {
           </p>
         )}
 
-        {/* Custom Links */}
-        {profile.links && profile.links.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-4 mb-8 max-w-md">
-            {profile.links.map((link, index) => (
-              <a
-                key={index}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 ${
-                  isDarkMode 
-                    ? 'bg-white text-black hover:bg-gray-100' 
-                    : 'bg-black text-white hover:bg-gray-800'
-                }`}
-              >
-                {link.icon && <span className="mr-2">{link.icon}</span>}
-                {link.title}
-              </a>
-            ))}
-          </div>
-        )}
-
-        {/* Social Links */}
+        {/* Contact & Links Section */}
         <div className="flex flex-wrap justify-center gap-4 max-w-md">
+          {/* Phone */}
           {profile.phone && (
             <a 
               href={`tel:${profile.phone}`} 
@@ -184,10 +163,13 @@ export default function ProfilePage() {
                   ? 'bg-white text-black hover:bg-gray-100' 
                   : 'bg-black text-white hover:bg-gray-800'
               }`}
+              title="Call"
             >
               <FaPhone size={20} />
             </a>
           )}
+
+          {/* Email */}
           {profile.email && (
             <a 
               href={`mailto:${profile.email}`} 
@@ -196,10 +178,33 @@ export default function ProfilePage() {
                   ? 'bg-white text-black hover:bg-gray-100' 
                   : 'bg-black text-white hover:bg-gray-800'
               }`}
+              title="Email"
             >
               <FaEnvelope size={20} />
             </a>
           )}
+
+          {/* Custom Links */}
+          {profile.links && profile.links.map((link, index) => (
+            <a
+              key={index}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`p-4 rounded-full transition-all duration-300 hover:scale-110 ${
+                isDarkMode 
+                  ? 'bg-white text-black hover:bg-gray-100' 
+                  : 'bg-black text-white hover:bg-gray-800'
+              }`}
+              title={link.title}
+            >
+              {link.icon ? (
+                <span className="text-lg">{link.icon}</span>
+              ) : (
+                <FaLink size={20} />
+              )}
+            </a>
+          ))}
         </div>
       </div>
     </div>
