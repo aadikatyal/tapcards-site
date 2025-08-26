@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+// Initialize Redis client
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 interface ProfileData {
   username: string;
@@ -22,10 +28,10 @@ interface ProfileData {
   updatedAt: string;
 }
 
-// Load existing profiles from KV
+// Load existing profiles from Redis
 async function loadProfiles(): Promise<Record<string, ProfileData>> {
   try {
-    const profiles = await kv.get('profiles');
+    const profiles = await redis.get('profiles');
     if (profiles) {
       return profiles as Record<string, ProfileData>;
     }
@@ -44,20 +50,11 @@ async function loadProfiles(): Promise<Record<string, ProfileData>> {
         linkedin: "aadikatyal",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      },
-      monty: {
-        username: "monty",
-        name: "Monty Katyal",
-        title: "Labrador Retriever",
-        image: "/default-profile.jpg",
-        bio: "i love meeting new people. let's connect!",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       }
     };
     
-    // Save default profiles to KV
-    await kv.set('profiles', defaultProfiles);
+    // Save default profiles to Redis
+    await redis.set('profiles', defaultProfiles);
     return defaultProfiles;
     
   } catch (error) {
@@ -66,10 +63,10 @@ async function loadProfiles(): Promise<Record<string, ProfileData>> {
   }
 }
 
-// Save profiles to KV
+// Save profiles to Redis
 async function saveProfiles(profiles: Record<string, ProfileData>) {
   try {
-    await kv.set('profiles', profiles);
+    await redis.set('profiles', profiles);
   } catch (error) {
     console.error('Error saving profiles:', error);
     throw error;
