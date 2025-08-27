@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaPhone, FaEnvelope, FaLink, FaSun, FaMoon } from "react-icons/fa";
+import Head from 'next/head';
 
 interface ProfileData {
   username: string;
@@ -43,6 +44,20 @@ export default function ProfilePage() {
         
         const profileData = await response.json();
         setProfile(profileData);
+        
+        // Update page title and metadata
+        document.title = `${username}'s tap profile`;
+        
+        // Update Open Graph meta tags
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute('content', `${username}'s tap profile`);
+        
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc) ogDesc.setAttribute('content', profileData.bio || `Connect with ${username} on tap`);
+        
+        const ogUrl = document.querySelector('meta[property="og:url"]');
+        if (ogUrl) ogUrl.setAttribute('content', `https://tapcards.us/${username}`);
+        
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load profile');
       } finally {
@@ -180,93 +195,111 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDarkMode ? 'bg-black text-white' : 'bg-white text-black'
-    }`}>
-      {/* Theme Toggle */}
-      <div className="absolute top-6 right-6">
-        <button
-          onClick={toggleTheme}
-          className={`p-3 rounded-full transition-all duration-300 hover:scale-110 ${
-            isDarkMode 
-              ? 'bg-white text-black hover:bg-gray-100' 
-              : 'bg-black text-white hover:bg-gray-800'
-          }`}
-        >
-          {isDarkMode ? <FaSun size={20} /> : <FaMoon size={20} />}
-        </button>
-      </div>
+    <>
+      <Head>
+        <title>{`${username}'s tap profile`}</title>
+        <meta property="og:title" content={`${username}'s tap profile`} />
+        <meta property="og:description" content={profile.bio || `Connect with ${username} on tap`} />
+        <meta property="og:url" content={`https://tapcards.us/${username}`} />
+        <meta property="og:type" content="profile" />
+        <meta property="og:site_name" content="tap" />
+        <meta property="og:image" content="/tap.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:title" content={`${username}'s tap profile`} />
+        <meta name="twitter:description" content={profile.bio || `Connect with ${username} on tap`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="/tap.png" />
+      </Head>
+      
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDarkMode ? 'bg-black text-white' : 'bg-white text-black'
+      }`}>
+        {/* Theme Toggle */}
+        <div className="absolute top-6 right-6">
+          <button
+            onClick={toggleTheme}
+            className={`p-3 rounded-full transition-all duration-300 hover:scale-110 ${
+              isDarkMode 
+                ? 'bg-white text-black hover:bg-gray-100' 
+                : 'bg-black text-white hover:bg-gray-800'
+            }`}
+          >
+            {isDarkMode ? <FaSun size={20} /> : <FaMoon size={20} />}
+          </button>
+        </div>
 
-      {/* Tap Logo */}
-      <div className="absolute top-6 left-6">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8">
-            <img 
-              src={isDarkMode ? "/tap.png" : "/tap-white.png"}
-              alt="tap logo"
-              className="w-full h-full object-contain"
+        {/* Tap Logo */}
+        <div className="absolute top-6 left-6">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8">
+              <img 
+                src={isDarkMode ? "/tap.png" : "/tap-white.png"}
+                alt="tap logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <span className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-black'}`}>
+              tap
+            </span>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 py-20">
+          {/* Profile Picture */}
+          <div className="relative mb-8">
+            <img
+              src={profile.image}
+              alt={profile.name}
+              className="w-32 h-32 rounded-full object-cover border-4 transition-all duration-300 hover:scale-105"
+              style={{
+                borderColor: isDarkMode ? '#fff' : '#000'
+              }}
             />
           </div>
-          <span className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-black'}`}>
-            tap
-          </span>
+
+          {/* Name */}
+          <h1 className="text-3xl font-bold mb-6 text-center">
+            {profile.name}
+          </h1>
+
+          {/* Bio */}
+          {profile.bio && (
+            <p className="text-lg text-center max-w-md mb-12 leading-relaxed opacity-90">
+              {profile.bio}
+            </p>
+          )}
+
+          {/* Contact & Links Section */}
+          <div className="flex flex-col items-center gap-3 max-w-sm">
+            {/* Custom Links */}
+            {profile.links && profile.links.map((link, index) => {
+              return (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`w-full px-6 py-4 rounded-full transition-all duration-300 hover:scale-105 flex items-center justify-center gap-3 ${
+                    isDarkMode 
+                      ? 'bg-white text-black hover:bg-gray-100' 
+                      : 'bg-black text-white hover:bg-gray-800'
+                  }`}
+                  title={link.title}
+                >
+                  {link.icon ? (
+                    renderBrandIcon(link.icon, link.title)
+                  ) : (
+                    <FaLink size={20} />
+                  )}
+                  <span className="font-medium">{link.title.toLowerCase()}</span>
+                </a>
+              );
+            })}
+          </div>
         </div>
       </div>
-
-      {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 py-20">
-        {/* Profile Picture */}
-        <div className="relative mb-8">
-          <img
-            src={profile.image}
-            alt={profile.name}
-            className="w-32 h-32 rounded-full object-cover border-4 transition-all duration-300 hover:scale-105"
-            style={{
-              borderColor: isDarkMode ? '#fff' : '#000'
-            }}
-          />
-        </div>
-
-        {/* Name */}
-        <h1 className="text-3xl font-bold mb-6 text-center">
-          {profile.name}
-        </h1>
-
-        {/* Bio */}
-        {profile.bio && (
-          <p className="text-lg text-center max-w-md mb-12 leading-relaxed opacity-90">
-            {profile.bio}
-          </p>
-        )}
-
-        {/* Contact & Links Section */}
-        <div className="flex flex-col items-center gap-3 max-w-sm">
-          {/* Custom Links */}
-          {profile.links && profile.links.map((link, index) => {
-            return (
-              <a
-                key={index}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`w-full px-6 py-4 rounded-full transition-all duration-300 hover:scale-105 flex items-center justify-center gap-3 ${
-                  isDarkMode 
-                    ? 'bg-white text-black hover:bg-gray-100' 
-                    : 'bg-black text-white hover:bg-gray-800'
-                }`}
-                title={link.title}
-              >
-                {link.icon ? (
-                  renderBrandIcon(link.icon, link.title)
-                ) : (
-                  <FaLink size={20} />
-                )}
-                <span className="font-medium">{link.title.toLowerCase()}</span>
-              </a>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
