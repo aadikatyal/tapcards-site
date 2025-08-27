@@ -3,12 +3,19 @@
     "apps": [],
     "details": [
       {
-        "appID": "X6F8273N97.com.aadikatyal.tap",
-        "paths": [ "/*" ]
+        "appID": "X6F8273N97.com.aadikatyal.tap.Clip",
+        "paths": ["/*"],
+        "components": [
+          {
+            "/": "/:username",
+            "comment": "Profile URLs go to App Clip first"
+          }
+        ]
       },
       {
-        "appID": "X6F8273N97.com.aadikatyal.tap.Clip",
-        "paths": [ "/", "/*" ]
+        "appID": "X6F8273N97.com.aadikatyal.tap",
+        "paths": ["/*"],
+        "comment": "Main app as fallback"
       }
     ]
   },
