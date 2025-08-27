@@ -65,7 +65,15 @@ export default function ProfilePage() {
     const normalizedIconName = iconName.toLowerCase().replace(/[^a-z0-9]/g, '');
     const normalizedTitle = linkTitle?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
     
-    console.log('Icon:', iconName, 'Title:', linkTitle, 'Normalized icon:', normalizedIconName, 'Normalized title:', normalizedTitle);
+    // Handle phone icons
+    if (iconName === '📞' || iconName === '📱' || iconName === '☎️' || normalizedTitle === 'phone') {
+      return <FaPhone size={20} />;
+    }
+    
+    // Handle email icons
+    if (iconName === '✉️' || iconName === '📧' || iconName === '📮' || normalizedTitle === 'email' || normalizedTitle === 'mail') {
+      return <FaEnvelope size={20} />;
+    }
     
     // Handle emoji icons by mapping them to brand logos based on title
     if (iconName === '📸' || iconName === '📷' || normalizedTitle === 'instagram') {
