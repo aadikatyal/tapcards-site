@@ -27,6 +27,7 @@ interface ProfileData {
   name: string;
   title: string;
   image: string;
+  avatarURL?: string; // Add this for iOS app compatibility
   bio: string;
   phone?: string;
   email?: string;
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Received profile data:', body);
     
-    const { username, displayName, bio, links, theme, isPublic } = body;
+    const { username, displayName, bio, links, theme, isPublic, avatarURL } = body;
     
     if (!username || !displayName) {
       const errorResponse = NextResponse.json(
@@ -187,6 +188,7 @@ export async function POST(request: NextRequest) {
       name: displayName,
       title: bio ? bio.substring(0, 100) : (existingProfile?.title || "Tap User"),
       image: existingProfile?.image || "/default-profile.jpg",
+      avatarURL: avatarURL || existingProfile?.avatarURL,
       bio: bio || existingProfile?.bio || "",
       phone: existingProfile?.phone,
       email: existingProfile?.email,
@@ -225,7 +227,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, displayName, bio, links, theme, isPublic } = body;
+    const { username, displayName, bio, links, theme, isPublic, avatarURL } = body;
     
     if (!username) {
       const errorResponse = NextResponse.json(
@@ -241,7 +243,7 @@ export async function PUT(request: NextRequest) {
     if (!existingProfile) {
       const errorResponse = NextResponse.json(
         { error: 'Profile not found' }, 
-        { status: 404 }
+        { status: 400 }
       );
       return addCORSHeaders(errorResponse);
     }
@@ -252,6 +254,7 @@ export async function PUT(request: NextRequest) {
       name: displayName || existingProfile.name,
       title: bio ? bio.substring(0, 100) : existingProfile.title,
       bio: bio || existingProfile.bio,
+      avatarURL: avatarURL || existingProfile.avatarURL,
       links: links || existingProfile.links,
       theme: theme || existingProfile.theme,
       isPublic: isPublic !== undefined ? isPublic : existingProfile.isPublic,
