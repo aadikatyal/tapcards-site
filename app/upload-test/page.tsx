@@ -113,6 +113,7 @@ export default function UploadTestPage() {
                   <p><strong>Size:</strong> {(result.data.size / 1024).toFixed(2)} KB</p>
                   <p><strong>Type:</strong> {result.data.type}</p>
                   <p><strong>Username:</strong> {result.data.username}</p>
+                  <p><strong>Profile Updated:</strong> {result.data.profileUpdated ? '✅ Yes' : '❌ No profile found'}</p>
                 </div>
                 {result.data.url && (
                   <div className="mt-3">
@@ -121,6 +122,18 @@ export default function UploadTestPage() {
                       alt="Uploaded profile" 
                       className="w-32 h-32 object-cover rounded-lg border"
                     />
+                    {result.data.profileUpdated && (
+                      <div className="mt-3">
+                        <a
+                          href={`/api/profiles?username=${result.data.username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          View Updated Profile API
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

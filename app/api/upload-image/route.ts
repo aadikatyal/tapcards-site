@@ -2,6 +2,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
+import { Redis } from '@upstash/redis';
+
+// Initialize Redis client for profile updates
+let redis: Redis | null = null;
+
+try {
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  
+  if (redisUrl && redisToken) {
+    redis = new Redis({
+      url: redisUrl,
+      token: redisToken,
+    });
+  }
+} catch (error) {
+  console.error('Failed to initialize Redis client:', error);
+  redis = null;
+}
 
 // Maximum file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -14,6 +33,32 @@ const ALLOWED_TYPES = [
   'image/webp',
   'image/gif'
 ];
+
+// Profile loading and saving functions
+async function loadProfiles(): Promise<Record<string, any>> {
+  try {
+    if (!redis) {
+      console.log('Redis not available for profile updates');
+      return {};
+    }
+    
+    const profiles = await redis.get('profiles');
+    return (profiles as Record<string, any>) || {};
+  } catch (error) {
+    console.error('Error loading profiles:', error);
+    return {};
+  }
+}
+
+async function saveProfiles(profiles: Record<string, any>) {
+  try {
+    if (redis) {
+      await redis.set('profiles', profiles);
+    }
+  } catch (error) {
+    console.error('Error saving profiles:', error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -87,6 +132,32 @@ export async function POST(request: NextRequest) {
     // Use the blob URL
     const publicUrl = blob.url;
 
+    // Update the user's profile with the new image URL
+    let existingProfile: any = null;
+    try {
+      const profiles = await loadProfiles();
+      existingProfile = profiles[username];
+      
+      if (existingProfile) {
+        // Update the profile with new image URL
+        const updatedProfile = {
+          ...existingProfile,
+          image: publicUrl,
+          avatarURL: publicUrl, // Also update avatarURL for iOS compatibility
+          updatedAt: new Date().toISOString(),
+        };
+        
+        profiles[username] = updatedProfile;
+        await saveProfiles(profiles);
+        console.log(`Profile updated for ${username} with new image: ${publicUrl}`);
+      } else {
+        console.log(`No existing profile found for ${username}, image uploaded but profile not updated`);
+      }
+    } catch (profileError) {
+      console.error('Error updating profile with new image:', profileError);
+      // Don't fail the upload if profile update fails
+    }
+
     // Return success response with CORS headers
     return NextResponse.json(
       {
@@ -98,7 +169,8 @@ export async function POST(request: NextRequest) {
           size: file.size,
           type: file.type,
           username,
-          uploadedAt: new Date().toISOString()
+          uploadedAt: new Date().toISOString(),
+          profileUpdated: existingProfile ? true : false
         }
       },
       {
