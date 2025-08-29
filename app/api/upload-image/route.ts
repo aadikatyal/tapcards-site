@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
+import { put } from '@vercel/blob';
 
 // Maximum file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -78,20 +76,14 @@ export async function POST(request: NextRequest) {
     const fileExtension = file.type.split('/')[1];
     const filename = `${username}-${timestamp}.${fileExtension}`;
 
-    // Ensure profiles directory exists
-    const profilesDir = path.join(process.cwd(), 'public', 'profiles');
-    if (!existsSync(profilesDir)) {
-      await mkdir(profilesDir, { recursive: true });
-    }
+    // Upload to Vercel Blob Storage instead of local filesystem
+    const blob = await put(filename, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
 
-    // Save file to profiles directory
-    const filePath = path.join(profilesDir, filename);
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
-
-    // Generate public URL
-    const publicUrl = `/profiles/${filename}`;
+    // Use the blob URL
+    const publicUrl = blob.url;
 
     // Return success response with CORS headers
     return NextResponse.json(
