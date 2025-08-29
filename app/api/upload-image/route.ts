@@ -1,3 +1,5 @@
+// app/api/upload-image/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 
