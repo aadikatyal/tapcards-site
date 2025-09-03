@@ -48,11 +48,8 @@ export async function POST(request: NextRequest) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency,
-      // Configure for Tap to Pay on iPhone - prevent redirect-based payment methods
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'never', // This prevents redirect-based payment methods
-      },
+      // Configure for Tap to Pay on iPhone - include card_present for in-person payments
+      payment_method_types: ['card', 'card_present'],
       metadata: {
         source: 'tap-app',
         timestamp: new Date().toISOString(),
