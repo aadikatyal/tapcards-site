@@ -44,17 +44,12 @@ export async function POST(request: NextRequest) {
     console.log('🔍 DEBUG: Valid request - amount:', amount, 'currency:', currency);
     console.log('🔍 DEBUG: Calling Stripe API to create payment intent...');
     
-    // Create a PaymentIntent with the order amount and currency
     // Create a PaymentIntent specifically configured for Tap to Pay on iPhone
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency,
       // Configure for Tap to Pay on iPhone - only card payments, no redirects
       payment_method_types: ['card'],
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'never', // Prevent redirect-based payment methods
-      },
       // Add return_url to satisfy redirect-based payment method requirements
       return_url: 'https://tapcards.us/payment-return',
       metadata: {
