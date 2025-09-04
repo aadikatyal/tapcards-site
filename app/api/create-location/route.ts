@@ -31,17 +31,25 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Error creating location:', error);
+    
+    // Type-safe error handling
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorType = (error as any)?.type || 'unknown_error';
+    const errorCode = (error as any)?.code || 'unknown_code';
+    const declineCode = (error as any)?.decline_code;
+    
     console.error('Error details:', {
-      message: error.message,
-      type: error.type,
-      code: error.code,
-      decline_code: error.decline_code
+      message: errorMessage,
+      type: errorType,
+      code: errorCode,
+      decline_code: declineCode
     });
+    
     return Response.json(
       { 
-        error: `Failed to create location: ${error.message}`,
-        details: error.type || 'unknown_error',
-        code: error.code || 'unknown_code'
+        error: `Failed to create location: ${errorMessage}`,
+        details: errorType,
+        code: errorCode
       },
       { status: 500 }
     );
