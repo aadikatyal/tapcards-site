@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('🔍 DEBUG: Request body:', body);
     
-    const { amount, currency = 'usd', recipient_email, note } = body;
+    const { amount, currency = 'usd', recipient_phone, note } = body;
 
     // Validate the request
     if (!amount || typeof amount !== 'number' || amount <= 0) {
@@ -40,16 +40,16 @@ export async function POST(request: NextRequest) {
       return addCORSHeaders(errorResponse);
     }
 
-    if (!recipient_email || !recipient_email.includes('@')) {
-      console.log('❌ DEBUG: Invalid recipient email:', recipient_email);
+    if (!recipient_phone || recipient_phone.length < 10) {
+      console.log('❌ DEBUG: Invalid recipient phone:', recipient_phone);
       const errorResponse = NextResponse.json(
-        { error: 'Valid recipient email is required' },
+        { error: 'Valid recipient phone number is required' },
         { status: 400 }
       );
       return addCORSHeaders(errorResponse);
     }
     
-    console.log('🔍 DEBUG: Valid request - amount:', amount, 'recipient:', recipient_email);
+    console.log('🔍 DEBUG: Valid request - amount:', amount, 'recipient:', recipient_phone);
 
     // Create a PaymentIntent for sending money
     const paymentIntent = await stripe.paymentIntents.create({
@@ -59,11 +59,11 @@ export async function POST(request: NextRequest) {
       return_url: 'https://tapcards.us/payment-return',
       metadata: {
         source: 'tap-app-send-money',
-        recipient_email,
+        recipient_phone,
         note: note || '',
         timestamp: new Date().toISOString(),
       },
-      description: `Send money to ${recipient_email}${note ? ` - ${note}` : ''}`,
+      description: `Send money to ${recipient_phone}${note ? ` - ${note}` : ''}`,
     });
 
     console.log('✅ DEBUG: Send money payment intent created successfully');
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         debug: {
           hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
           errorType: typeof error,
-          errorMessage: error instanceof Error ? error.message : String(error)
+          errorMessage: error.message
         }
       },
       { status: statusCode }
