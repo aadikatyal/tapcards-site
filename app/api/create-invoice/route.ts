@@ -117,6 +117,11 @@ export async function POST(request: NextRequest) {
       description: description,
     });
 
+    // Ensure invoice has an ID
+    if (!invoice.id) {
+      throw new Error('Invoice creation failed - no ID returned');
+    }
+
     // Add line item to the invoice
     await stripe.invoiceItems.create({
       customer: customer.id,
@@ -165,7 +170,7 @@ export async function POST(request: NextRequest) {
         debug: {
           hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
           errorType: typeof error,
-          errorMessage: error.message
+          errorMessage: error instanceof Error ? error.message : String(error)
         }
       },
       { status: statusCode }
