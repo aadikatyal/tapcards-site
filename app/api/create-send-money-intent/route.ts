@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         debug: {
           hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
           errorType: typeof error,
-          errorMessage: error.message
+          errorMessage: error instanceof Error ? error.message : String(error)
         }
       },
       { status: statusCode }
