@@ -166,17 +166,11 @@ export default function ProfilePage() {
       <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
         isDarkMode ? 'bg-black text-white' : 'bg-white text-black'
       }`}>
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4">
-            <svg viewBox="0 0 24 24" className="w-full h-full">
-              <path 
-                fill={isDarkMode ? "#fff" : "#000"} 
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
-              />
-            </svg>
-          </div>
-          <p className="text-lg">Loading profile...</p>
-        </div>
+        <img
+          src={isDarkMode ? "/tap.png" : "/tap-white.png"}
+          alt="tap"
+          className="w-20 h-20 object-contain animate-pulse"
+        />
       </div>
     );
   }

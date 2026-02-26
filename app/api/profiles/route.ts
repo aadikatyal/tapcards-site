@@ -27,10 +27,11 @@ interface ProfileData {
   name: string;
   title: string;
   image: string;
-  avatarURL?: string; // Add this for iOS app compatibility
+  avatarURL?: string;
   bio: string;
   phone?: string;
   email?: string;
+  authProvider?: string; // 'google' or 'apple' - to link profile to auth account
   links?: Array<{
     title: string;
     url: string;
@@ -60,7 +61,6 @@ async function loadProfiles(): Promise<Record<string, ProfileData>> {
     }
     
     console.log('No profiles in Redis, creating default profiles...');
-    // Return default profiles if none exist
     const defaultProfiles = getDefaultProfiles();
     
     // Save default profiles to Redis
@@ -118,37 +118,77 @@ export async function OPTIONS() {
 }
 
 // GET endpoint to fetch a specific profile
+// Supports: ?username=xxx OR ?email=xxx&authProvider=google
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
+    const email = searchParams.get('email');
+    const authProvider = searchParams.get('authProvider');
     
-    console.log('GET request for username:', username);
+    console.log('GET request - username:', username, 'email:', email, 'authProvider:', authProvider);
     
-    if (!username) {
+    // Load all profiles
+    console.log('Loading profiles...');
+    const profiles = await loadProfiles();
+    console.log('Available profiles:', Object.keys(profiles));
+    
+    let profile: ProfileData | undefined;
+    
+    // If looking up by email + authProvider (for iOS app sign-in)
+    if (email && authProvider) {
+      console.log(`Searching for profile with email: ${email}, authProvider: ${authProvider}`);
+      
+      // Search through all profiles to find matching email + authProvider
+      for (const [key, p] of Object.entries(profiles)) {
+        if (p.email?.toLowerCase() === email.toLowerCase() && 
+            p.authProvider === authProvider) {
+          profile = p;
+          console.log(`Found profile by email+authProvider: ${profile.username}`);
+          break;
+        }
+      }
+      
+      if (!profile) {
+        const errorResponse = NextResponse.json(
+          { error: 'Profile not found' }, 
+          { status: 404 }
+        );
+        return addCORSHeaders(errorResponse);
+      }
+    }
+    // If looking up by username (existing functionality)
+    else if (username) {
+      profile = profiles[username.toLowerCase()];
+      console.log('Found profile by username:', profile ? 'yes' : 'no');
+      
+      if (!profile) {
+        const errorResponse = NextResponse.json(
+          { error: 'Profile not found' }, 
+          { status: 404 }
+        );
+        return addCORSHeaders(errorResponse);
+      }
+    }
+    // No valid query params
+    else {
       const errorResponse = NextResponse.json(
-        { error: 'Username is required' }, 
+        { error: 'Must provide username or email+authProvider' }, 
         { status: 400 }
       );
       return addCORSHeaders(errorResponse);
     }
     
-    console.log('Loading profiles...');
-    const profiles = await loadProfiles();
-    console.log('Available profiles:', Object.keys(profiles));
-    
-    const profile = profiles[username];
-    console.log('Found profile:', profile ? 'yes' : 'no');
-    
-    if (!profile) {
-      const errorResponse = NextResponse.json(
-        { error: 'Profile not found' }, 
-        { status: 404 }
-      );
-      return addCORSHeaders(errorResponse);
-    }
-    
-    const successResponse = NextResponse.json(profile);
+    // Return profile in format expected by iOS app
+    const successResponse = NextResponse.json({
+      username: profile.username,
+      name: profile.name,
+      bio: profile.bio,
+      avatarURL: profile.avatarURL,
+      links: profile.links || [],
+      theme: profile.theme || 'default',
+      isPublic: profile.isPublic !== false,
+    });
     return addCORSHeaders(successResponse);
     
   } catch (error) {
@@ -167,7 +207,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('Received profile data:', body);
     
-    const { username, displayName, bio, links, theme, isPublic, avatarURL } = body;
+    const { username, displayName, bio, links, theme, isPublic, avatarURL, email, authProvider } = body;
     
     if (!username || !displayName) {
       const errorResponse = NextResponse.json(
@@ -178,20 +218,37 @@ export async function POST(request: NextRequest) {
     }
     
     const profiles = await loadProfiles();
-    const existingProfile = profiles[username];
+    const normalizedUsername = username.toLowerCase();
+    const existingProfile = profiles[normalizedUsername];
     const isUpdate = existingProfile !== undefined;
+    
+    // Check if email + authProvider already has a profile (prevent duplicate accounts)
+    if (email && authProvider && !isUpdate) {
+      for (const [key, p] of Object.entries(profiles)) {
+        if (p.email?.toLowerCase() === email.toLowerCase() && 
+            p.authProvider === authProvider &&
+            key !== normalizedUsername) {
+          const errorResponse = NextResponse.json(
+            { error: 'Profile already exists for this account', success: false }, 
+            { status: 400 }
+          );
+          return addCORSHeaders(errorResponse);
+        }
+      }
+    }
     
     // Create or update profile
     const now = new Date().toISOString();
     const profileData: ProfileData = {
-      username: username.toLowerCase(),
+      username: normalizedUsername,
       name: displayName,
       title: bio ? bio.substring(0, 100) : (existingProfile?.title || "Tap User"),
       image: existingProfile?.image || "/default-profile.jpg",
       avatarURL: avatarURL || existingProfile?.avatarURL,
       bio: bio || existingProfile?.bio || "",
       phone: existingProfile?.phone,
-      email: existingProfile?.email,
+      email: email || existingProfile?.email, // Save email from request
+      authProvider: authProvider || existingProfile?.authProvider, // Save authProvider from request
       links: links || existingProfile?.links || [],
       theme: theme || existingProfile?.theme || "default",
       isPublic: isPublic !== undefined ? isPublic : (existingProfile?.isPublic ?? true),
@@ -199,15 +256,23 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     };
     
-    profiles[username] = profileData;
+    profiles[normalizedUsername] = profileData;
     await saveProfiles(profiles);
     
     console.log('Profile saved successfully:', profileData);
     
     const successResponse = NextResponse.json({ 
       success: true, 
-      profile: profileData,
-      url: `https://tapcards.us/${username}`,
+      profile: {
+        username: profileData.username,
+        displayName: profileData.name,
+        bio: profileData.bio,
+        avatarURL: profileData.avatarURL,
+        links: profileData.links,
+        theme: profileData.theme,
+        isPublic: profileData.isPublic,
+      },
+      url: `https://tapcards.us/${normalizedUsername}`,
       action: isUpdate ? 'updated' : 'created'
     });
     
@@ -216,7 +281,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error saving profile:', error);
     const errorResponse = NextResponse.json(
-      { error: 'Failed to save profile' }, 
+      { error: 'Failed to save profile', success: false }, 
       { status: 500 }
     );
     return addCORSHeaders(errorResponse);
@@ -238,12 +303,13 @@ export async function PUT(request: NextRequest) {
     }
     
     const profiles = await loadProfiles();
-    const existingProfile = profiles[username];
+    const normalizedUsername = username.toLowerCase();
+    const existingProfile = profiles[normalizedUsername];
     
     if (!existingProfile) {
       const errorResponse = NextResponse.json(
         { error: 'Profile not found' }, 
-        { status: 400 }
+        { status: 404 }
       );
       return addCORSHeaders(errorResponse);
     }
@@ -261,12 +327,20 @@ export async function PUT(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
     
-    profiles[username] = updatedProfile;
+    profiles[normalizedUsername] = updatedProfile;
     await saveProfiles(profiles);
     
     const successResponse = NextResponse.json({ 
       success: true, 
-      profile: updatedProfile 
+      profile: {
+        username: updatedProfile.username,
+        displayName: updatedProfile.name,
+        bio: updatedProfile.bio,
+        avatarURL: updatedProfile.avatarURL,
+        links: updatedProfile.links,
+        theme: updatedProfile.theme,
+        isPublic: updatedProfile.isPublic,
+      }
     });
     
     return addCORSHeaders(successResponse);
