@@ -14,16 +14,18 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = "https://tapcards.us";
 
+const SITE_TITLE = "tap ᯤ";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "tap - your digital business card",
+  title: SITE_TITLE,
   description: "your digital business card. create a profile, share your link, and connect seamlessly.",
   icons: {
     icon: "/tap.png",
     apple: "/tap.png",
   },
   openGraph: {
-    title: "tap - your digital business card",
+    title: SITE_TITLE,
     description: "your digital business card. create a profile, share your link, and connect seamlessly.",
     type: "website",
     siteName: "tap",
@@ -39,7 +41,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "tap - your digital business card",
+    title: SITE_TITLE,
     description: "your digital business card. create a profile, share your link, and connect seamlessly.",
     images: ["/tap.png"],
   },

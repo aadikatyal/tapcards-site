@@ -3,12 +3,13 @@ import type { Metadata } from "next";
 
 const APP_STORE_URL = "https://apps.apple.com/us/app/tap-tools-pro/id6736921877";
 const SITE_URL = "https://tapcards.us";
+const SITE_TITLE = "tap ᯤ";
 
 export const metadata: Metadata = {
-  title: "tap - your digital business card",
+  title: SITE_TITLE,
   description: "your digital business card. create a profile, share your link, and connect seamlessly.",
   openGraph: {
-    title: "tap - your digital business card",
+    title: SITE_TITLE,
     description: "your digital business card. create a profile, share your link, and connect seamlessly.",
     url: SITE_URL,
     siteName: "tap",
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "tap - your digital business card",
+    title: SITE_TITLE,
     description: "your digital business card. create a profile, share your link, and connect seamlessly.",
     images: ["/tap.png"],
   },
