@@ -1,6 +1,26 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 const APP_STORE_URL = "https://apps.apple.com/us/app/tap-tools-pro/id6736921877";
+const SITE_URL = "https://tapcards.us";
+
+export const metadata: Metadata = {
+  title: "tap - your digital business card",
+  description: "your digital business card. create a profile, share your link, and connect seamlessly.",
+  openGraph: {
+    title: "tap - your digital business card",
+    description: "your digital business card. create a profile, share your link, and connect seamlessly.",
+    url: SITE_URL,
+    siteName: "tap",
+    images: [{ url: "/tap.png", width: 1200, height: 630, alt: "tap" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "tap - your digital business card",
+    description: "your digital business card. create a profile, share your link, and connect seamlessly.",
+    images: ["/tap.png"],
+  },
+};
 
 export default function Home() {
   return (

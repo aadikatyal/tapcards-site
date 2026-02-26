@@ -12,28 +12,35 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://tapcards.us";
+
 export const metadata: Metadata = {
-  title: "tap profile",
-  description: "share your professional profile with a beautiful digital business card. built by tap to make networking seamless.",
+  metadataBase: new URL(SITE_URL),
+  title: "tap - your digital business card",
+  description: "your digital business card. create a profile, share your link, and connect seamlessly.",
+  icons: {
+    icon: "/tap.png",
+    apple: "/tap.png",
+  },
   openGraph: {
-    title: "tap profile",
-    description: "share your professional profile with a beautiful digital business card. built by tap to make networking seamless.",
+    title: "tap - your digital business card",
+    description: "your digital business card. create a profile, share your link, and connect seamlessly.",
     type: "website",
     siteName: "tap",
-    url: "https://tapcards.us",
+    url: SITE_URL,
     images: [
       {
         url: "/tap.png",
         width: 1200,
         height: 630,
-        alt: "tap logo",
+        alt: "tap",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "tap profile",
-    description: "share your professional profile with a beautiful digital business card. built by tap to make networking seamless.",
+    title: "tap - your digital business card",
+    description: "your digital business card. create a profile, share your link, and connect seamlessly.",
     images: ["/tap.png"],
   },
 };
