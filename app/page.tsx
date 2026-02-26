@@ -32,7 +32,7 @@ export default function Home() {
           <img
             src="/tap.png"
             alt="tap"
-            className="w-20 h-20 object-contain"
+            className="w-28 h-28 object-contain animate-pulse"
           />
         </div>
         <h1 className="text-3xl font-bold mb-2 lowercase">tap</h1>
