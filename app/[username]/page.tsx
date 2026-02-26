@@ -9,7 +9,8 @@ interface ProfileData {
   username: string;
   name: string;
   title: string;
-  image: string;
+  image?: string;
+  avatarURL?: string;
   bio: string;
   phone?: string;
   email?: string;
@@ -244,7 +245,7 @@ export default function ProfilePage() {
           {/* Profile Picture */}
           <div className="relative mb-8">
             <img
-              src={profile.image}
+              src={profile.avatarURL || profile.image || '/default-profile.jpg'}
               alt={profile.name}
               className="w-32 h-32 rounded-full object-cover border-4 transition-all duration-300 hover:scale-105"
               style={{

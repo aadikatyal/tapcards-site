@@ -179,12 +179,13 @@ export async function GET(request: NextRequest) {
       return addCORSHeaders(errorResponse);
     }
     
-    // Return profile in format expected by iOS app
+    // Return profile in format expected by iOS app and web profile page
     const successResponse = NextResponse.json({
       username: profile.username,
       name: profile.name,
       bio: profile.bio,
       avatarURL: profile.avatarURL,
+      image: profile.image,
       links: profile.links || [],
       theme: profile.theme || 'default',
       isPublic: profile.isPublic !== false,
