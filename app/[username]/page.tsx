@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaPhone, FaEnvelope, FaLink, FaSun, FaMoon } from "react-icons/fa";
 import Head from 'next/head';
 
@@ -32,9 +32,13 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    const MIN_LOADING_MS = 800; // Show loader long enough to see the animation
+
     async function fetchProfile() {
+      const startTime = Date.now();
       try {
         setLoading(true);
         const response = await fetch(`/api/profiles?username=${username}`);
@@ -62,13 +66,24 @@ export default function ProfilePage() {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load profile');
       } finally {
-        setLoading(false);
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, MIN_LOADING_MS - elapsed);
+        loadingTimeoutRef.current = setTimeout(() => {
+          setLoading(false);
+          loadingTimeoutRef.current = null;
+        }, remaining);
       }
     }
 
     if (username) {
       fetchProfile();
     }
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+    };
   }, [username]);
 
   const toggleTheme = () => {

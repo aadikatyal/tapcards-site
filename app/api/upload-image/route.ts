@@ -132,11 +132,12 @@ export async function POST(request: NextRequest) {
     // Use the blob URL
     const publicUrl = blob.url;
 
-    // Update the user's profile with the new image URL
+    // Update the user's profile with the new image URL (keys are lowercase in Redis)
+    const normalizedUsername = username.trim().toLowerCase();
     let existingProfile: any = null;
     try {
       const profiles = await loadProfiles();
-      existingProfile = profiles[username];
+      existingProfile = profiles[normalizedUsername];
       
       if (existingProfile) {
         // Update the profile with new image URL
@@ -147,9 +148,9 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date().toISOString(),
         };
         
-        profiles[username] = updatedProfile;
+        profiles[normalizedUsername] = updatedProfile;
         await saveProfiles(profiles);
-        console.log(`Profile updated for ${username} with new image: ${publicUrl}`);
+        console.log(`Profile updated for ${normalizedUsername} with new image: ${publicUrl}`);
       } else {
         console.log(`No existing profile found for ${username}, image uploaded but profile not updated`);
       }
